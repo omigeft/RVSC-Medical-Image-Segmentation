@@ -175,15 +175,15 @@ def augmentation(img_dir, mask_i_dir, mask_o_dir, output_dir):
 
 
 if __name__ == '__main__':
-    # # 调用函数
-    # base_dir = '..'  # 当前目录作为基本目录
-    # copy_and_process_files(base_dir, 'TrainingSet', 'train_data', 1, 16)
-    # copy_contours(base_dir, 'TestSet', "Test1SetContours", "Test1Set", 17, 32)
-    # copy_contours(base_dir, 'TestSet', "Test2SetContours", "Test2Set", 33, 48)
-    # copy_and_process_files(base_dir, 'TestSet/Test1Set', 'test1_data', 17, 32)
-    # copy_and_process_files(base_dir, 'TestSet/Test2Set', 'test2_data', 33, 48)
-    #
-    # print("数据文件处理和转换完成。")
+    # 调用函数
+    base_dir = '..'  # 当前目录作为基本目录
+    copy_and_process_files(base_dir, 'TrainingSet', 'train_data', 1, 16)
+    copy_contours(base_dir, 'TestSet', "Test1SetContours", "Test1Set", 17, 32)
+    copy_contours(base_dir, 'TestSet', "Test2SetContours", "Test2Set", 33, 48)
+    copy_and_process_files(base_dir, 'TestSet/Test1Set', 'test1_data', 17, 32)
+    copy_and_process_files(base_dir, 'TestSet/Test2Set', 'test2_data', 33, 48)
+
+    print("数据文件处理和转换完成。")
 
     augmentation(Path('../train_data/imgs'), Path('../train_data/i-masks'), Path('../train_data/o-masks'),
                  Path('../train_data_aug'))

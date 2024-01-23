@@ -11,9 +11,9 @@ from tqdm import tqdm
 
 import wandb
 from evaluate import evaluate
-from unet import UNet
-from unet import UNetPlusPlus
-from unet import U2Net
+from models import UNet
+from models import UNetPlusPlus
+from models import U2Net
 from utils.data_loading import BasicDataset
 from utils.dice_score import dice_loss
 

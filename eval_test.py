@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from evaluate import evaluate
-from unet import UNet
+from models import UNet
 from utils.data_loading import BasicDataset
 
 def get_args():
