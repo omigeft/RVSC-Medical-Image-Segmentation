@@ -12,9 +12,8 @@ from tqdm import tqdm
 import wandb
 from evaluate import evaluate
 from unet import UNet
-from unet import UNetPlus
-from unet import U2Net
 from unet import UNetPlusPlus
+from unet import U2Net
 from utils.data_loading import BasicDataset
 from utils.dice_score import dice_loss
 
@@ -25,17 +24,19 @@ dir_checkpoint = Path('../i-checkpoints/')
 def train_model(
         model,
         device,
-        epochs: int = 5,
-        batch_size: int = 1,
-        learning_rate: float = 1e-5,
-        val_percent: float = 0.1,
-        save_checkpoint: bool = True,
-        img_scale: float = 0.5,
-        amp: bool = False,
-        weight_decay: float = 1e-8,
-        momentum: float = 0.999,
-        gradient_clipping: float = 1.0,
-        loss_function: str = 'dice+ce',
+        epochs: int,
+        batch_size: int,
+        learning_rate: float,
+        val_percent: float,
+        save_checkpoint: bool,
+        img_scale: float,
+        amp: bool,
+        weight_decay: float,
+        momentum: float,
+        gradient_clipping: float,
+        epochs_per_checkpoint: int,
+        loss_function: str,
+        optimizer_name: str,
 ):
     # 1. Create dataset
     dataset = BasicDataset(dir_img, dir_mask, img_scale)
@@ -67,11 +68,17 @@ def train_model(
         Device:          {device.type}
         Images scaling:  {img_scale}
         Mixed Precision: {amp}
+        Loss function:   {loss_function}
+        Optimizer:       {optimizer_name}
+        
     ''')
 
     # 4. Set up the optimizer, the loss, the learning rate scheduler and the loss scaling for AMP
-    optimizer = optim.RMSprop(model.parameters(),
+    if optimizer_name == 'rmsprop':
+        optimizer = optim.RMSprop(model.parameters(),
                               lr=learning_rate, weight_decay=weight_decay, momentum=momentum, foreach=True)
+    else:   # optimizer_name == 'adam':
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay, foreach=True)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=50)  # goal: maximize Dice score
     grad_scaler = torch.cuda.amp.GradScaler(enabled=amp)
     criterion = nn.CrossEntropyLoss() if model.n_classes > 1 else nn.BCEWithLogitsLoss()
@@ -93,14 +100,15 @@ def train_model(
                 images = images.to(device=device, dtype=torch.float32, memory_format=torch.channels_last)
                 true_masks = true_masks.to(device=device, dtype=torch.long)
 
-                with torch.autocast(device.type if device.type != 'mps' else 'cpu', enabled=amp):
+                with torch.autocast('cuda' if device.type == 'cuda' else 'cpu', enabled=amp):
+                # with torch.autocast(device.type if device.type != 'mps' else 'cpu', enabled=amp):
                     masks_pred = model(images)
                     if model.n_classes == 1:
                         if loss_function == 'dice':
                             loss = dice_loss(F.sigmoid(masks_pred.squeeze(1)), true_masks.float(), multiclass=False)
                         elif loss_function == 'ce':
                             loss = criterion(masks_pred.squeeze(1), true_masks.float())
-                        else:
+                        else:   # loss_function == 'dice+ce'
                             loss = criterion(masks_pred.squeeze(1), true_masks.float())
                             loss += dice_loss(F.sigmoid(masks_pred.squeeze(1)), true_masks.float(), multiclass=False)
                     else:
@@ -112,7 +120,7 @@ def train_model(
                             )
                         elif loss_function == 'ce':
                             loss = criterion(masks_pred, true_masks)
-                        else:
+                        else:   # loss_function == 'dice+ce'
                             loss = criterion(masks_pred, true_masks)
                             loss += dice_loss(
                                 F.softmax(masks_pred, dim=1).float(),
@@ -174,32 +182,47 @@ def train_model(
                         except:
                             pass
 
-        if save_checkpoint and epoch > epochs * 0.9:
+        if save_checkpoint and epoch % epochs_per_checkpoint == 0:
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
             state_dict = model.state_dict()
             state_dict['mask_values'] = dataset.mask_values
             torch.save(state_dict, str(dir_checkpoint / 'checkpoint_epoch{}.pth'.format(epoch)))
             logging.info(f'Checkpoint {epoch} saved!')
 
+    wandb.finish()
+
 
 def get_args():
     parser = argparse.ArgumentParser(description='Train the UNet on images and target masks')
-    parser.add_argument('--model', '-m', metavar='M', type=str, default='unet',
-                        help='Name of model ("unet", "unet+", "unet++", "u2net")')
+    parser.add_argument('--model', '-md', metavar='M', type=str, default='unet',
+                        help='Name of model ("unet", "unet++", "u2net")')
     parser.add_argument('--epochs', '-e', metavar='E', type=int, default=5, help='Number of epochs')
-    parser.add_argument('--batch-size', '-b', dest='batch_size', metavar='B', type=int, default=1, help='Batch size')
-    parser.add_argument('--learning-rate', '-l', metavar='LR', type=float, default=1e-5,
+    parser.add_argument('--batch-size', '-bs', dest='batch_size', metavar='B', type=int, default=1, help='Batch size')
+    parser.add_argument('--learning-rate', '-lr', metavar='LR', type=float, default=1e-5,
                         help='Learning rate', dest='lr')
     parser.add_argument('--load', '-f', type=str, default=False, help='Load model from a .pth file')
     parser.add_argument('--scale', '-s', type=float, default=0.5, help='Downscaling factor of the images')
     parser.add_argument('--validation', '-v', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')
     parser.add_argument('--amp', action='store_true', default=False, help='Use mixed precision')
-    parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
+    parser.add_argument('--weight-decay', '-w', type=float, default=1e-8, help='Weight decay')
+    parser.add_argument('--momentum', '-mm', type=float, default=0.999, help='Momentum')
+    parser.add_argument('--gradient-clipping', '-gc', type=float, default=1.0, help='Gradient clipping')
+    parser.add_argument('--bilinear', '-bl', action='store_true', default=False, help='Use bilinear upsampling')
     parser.add_argument('--classes', '-c', type=int, default=2, help='Number of classes')
-    parser.add_argument('--loss', type=str, default='dice+ce', help='Loss function ("dice", "ce", "dice+ce")')
+    parser.add_argument('--epochs-per-checkpoint', '-epc', type=int, default=1, help='Save checkpoint every N epochs')
+    parser.add_argument('--loss', '-ls', type=str, default='dice+ce', help='Loss function ("dice", "ce", "dice+ce")')
+    parser.add_argument('--optimizer', '-o', type=str, default='adam', help='Optimizer ("adam", "rmsprop")')
 
-    return parser.parse_args()
+    parsed_args = parser.parse_args()
+    if parsed_args.model not in ['unet', 'unet++', 'u2net']:
+        raise ValueError('Model must be one of "unet", "unet++", "u2net"')
+    if parsed_args.loss not in ['dice', 'ce', 'dice+ce']:
+        raise ValueError('Loss must be one of "dice", "ce", "dice+ce"')
+    if parsed_args.optimizer not in ['adam', 'rmsprop']:
+        raise ValueError('Optimizer must be one of "adam", "rmsprop"')
+
+    return parsed_args
 
 
 if __name__ == '__main__':
@@ -212,13 +235,11 @@ if __name__ == '__main__':
     # Change here to adapt to your data
     # n_channels=3 for RGB images
     # n_classes is the number of probabilities you want to get per pixel
-    if args.model == 'unet+':
-        model = UNetPlus(n_channels=1, n_classes=args.classes, bilinear=args.bilinear)
-    elif args.model == 'unet++':
+    if args.model == 'unet++':
         model = UNetPlusPlus(n_channels=1, n_classes=args.classes, bilinear=args.bilinear)
     elif args.model == 'u2net':
         model = U2Net(n_channels=1, n_classes=args.classes)
-    else:
+    else:   # args.model == 'unet'
         model = UNet(n_channels=1, n_classes=args.classes, bilinear=args.bilinear)
     model = model.to(memory_format=torch.channels_last)
 
@@ -237,14 +258,20 @@ if __name__ == '__main__':
     try:
         train_model(
             model=model,
+            device=device,
             epochs=args.epochs,
             batch_size=args.batch_size,
             learning_rate=args.lr,
-            device=device,
-            img_scale=args.scale,
             val_percent=args.val / 100,
+            save_checkpoint=True,
+            img_scale=args.scale,
             amp=args.amp,
-            loss_function=args.loss
+            weight_decay=args.weight_decay,
+            momentum=args.momentum,
+            gradient_clipping=args.gradient_clipping,
+            epochs_per_checkpoint=args.epochs_per_checkpoint,
+            loss_function=args.loss,
+            optimizer_name=args.optimizer
         )
     except torch.cuda.OutOfMemoryError:
         logging.error('Detected OutOfMemoryError! '
@@ -254,14 +281,18 @@ if __name__ == '__main__':
         model.use_checkpointing()
         train_model(
             model=model,
+            device=device,
             epochs=args.epochs,
             batch_size=args.batch_size,
             learning_rate=args.lr,
-            device=device,
-            img_scale=args.scale,
             val_percent=args.val / 100,
+            save_checkpoint=True,
+            img_scale=args.scale,
             amp=args.amp,
-            loss_function=args.loss
+            weight_decay=args.weight_decay,
+            momentum=args.momentum,
+            gradient_clipping=args.gradient_clipping,
+            epochs_per_checkpoint=args.epochs_per_checkpoint,
+            loss_function=args.loss,
+            optimizer_name=args.optimizer
         )
-
-    wandb.finish()
