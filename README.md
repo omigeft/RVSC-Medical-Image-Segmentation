@@ -1,6 +1,8 @@
-## 准备
+[中文版README](README_zh.md)
 
-创建工作目录，并拉取代码。
+## Preparation
+
+Create a working directory and pull the code.
 
 ```
 mkdir ws
@@ -10,9 +12,9 @@ cd src
 git clone https://github.com/omigeft/RVSC-Medical-Image-Segmentation.git
 ```
 
-## 数据预处理
+## Data Preprocess
 
-解压数据集到`ws`目录下，数据集文件结构如下：
+Extract the dataset to the 'ws' directory and make the dataset file structure as follows:
 
 ```
 /TrainingSet
@@ -23,16 +25,16 @@ git clone https://github.com/omigeft/RVSC-Medical-Image-Segmentation.git
     /Test2SetContours
 ```
 
-进入源代码目录，运行`data_preprocess.py`，自动处理RVSC数据集为可训练的格式并进行数据增广。
+Enter the source code directory and run `data_preprocess.py`, automatically processes the RVSC dataset into a trainable format and performs data augmentation.
 
 ```sh
 cd src
 python data_preprocess.py
 ```
 
-## 训练
+## Training
 
-在源代码目录，运行`train.py`，开始训练。
+In the source code directory, run `train.py` to start training.
 
 ```sh
 python train.py \
@@ -43,7 +45,7 @@ python train.py \
 --amp
 ```
 
-## 测试
+## Testing
 
 ```sh
 python train.py \
@@ -54,7 +56,7 @@ python train.py \
 --no-save
 ```
 
-## 利用测试集评估模型
+## Evaluate models using test sets
 
 ```sh
 python eval_test.py \
@@ -64,4 +66,4 @@ python eval_test.py \
 --scale 0.5
 ```
 
-TODO: `eval_test.py`无法评估不同种类模型
+TODO: `eval_test.py` cannot evaluate different types of models.
