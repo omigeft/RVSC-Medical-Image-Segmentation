@@ -24,6 +24,9 @@ dir_checkpoint = Path('../i-checkpoints/')
 def train_model(
         model,
         device,
+        model_name: str,
+        classes: int,
+        bilinear: bool,
         epochs: int,
         batch_size: int,
         learning_rate: float,
@@ -59,6 +62,9 @@ def train_model(
     )
 
     logging.info(f'''Starting training:
+        Model:           {model_name}
+        Classes:         {classes}
+        Bilinear:        {bilinear}
         Epochs:          {epochs}
         Batch size:      {batch_size}
         Learning rate:   {learning_rate}
@@ -67,7 +73,11 @@ def train_model(
         Checkpoints:     {save_checkpoint}
         Device:          {device.type}
         Images scaling:  {img_scale}
-        Mixed Precision: {amp}
+        Mixed precision: {amp}
+        Weight decay:    {weight_decay}
+        Momentum:        {momentum}
+        Gradient clipping: {gradient_clipping}
+        Epochs per checkpoint: {epochs_per_checkpoint}
         Loss function:   {loss_function}
         Optimizer:       {optimizer_name}
         
@@ -186,7 +196,7 @@ def train_model(
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
             state_dict = model.state_dict()
             state_dict['mask_values'] = dataset.mask_values
-            torch.save(state_dict, str(dir_checkpoint / 'checkpoint_epoch{}.pth'.format(epoch)))
+            torch.save(state_dict, str(dir_checkpoint / f'{model_name}_checkpoint_epoch{epoch}.pth'))
             logging.info(f'Checkpoint {epoch} saved!')
 
     wandb.finish()
@@ -196,6 +206,8 @@ def get_args():
     parser = argparse.ArgumentParser(description='Train the UNet on images and target masks')
     parser.add_argument('--model', '-md', metavar='M', type=str, default='unet',
                         help='Name of model ("unet", "unet++", "u2net")')
+    parser.add_argument('--classes', '-c', type=int, default=2, help='Number of classes')
+    parser.add_argument('--bilinear', '-bl', action='store_true', default=False, help='Use bilinear upsampling')
     parser.add_argument('--epochs', '-e', metavar='E', type=int, default=5, help='Number of epochs')
     parser.add_argument('--batch-size', '-bs', dest='batch_size', metavar='B', type=int, default=1, help='Batch size')
     parser.add_argument('--learning-rate', '-lr', metavar='LR', type=float, default=1e-5,
@@ -208,8 +220,6 @@ def get_args():
     parser.add_argument('--weight-decay', '-w', type=float, default=1e-8, help='Weight decay')
     parser.add_argument('--momentum', '-mm', type=float, default=0.999, help='Momentum')
     parser.add_argument('--gradient-clipping', '-gc', type=float, default=1.0, help='Gradient clipping')
-    parser.add_argument('--bilinear', '-bl', action='store_true', default=False, help='Use bilinear upsampling')
-    parser.add_argument('--classes', '-c', type=int, default=2, help='Number of classes')
     parser.add_argument('--epochs-per-checkpoint', '-epc', type=int, default=1, help='Save checkpoint every N epochs')
     parser.add_argument('--loss', '-ls', type=str, default='dice+ce', help='Loss function ("dice", "ce", "dice+ce")')
     parser.add_argument('--optimizer', '-o', type=str, default='adam', help='Optimizer ("adam", "rmsprop")')
@@ -259,6 +269,9 @@ if __name__ == '__main__':
         train_model(
             model=model,
             device=device,
+            model_name=args.model,
+            classes=args.classes,
+            bilinear=args.bilinear,
             epochs=args.epochs,
             batch_size=args.batch_size,
             learning_rate=args.lr,
@@ -282,6 +295,9 @@ if __name__ == '__main__':
         train_model(
             model=model,
             device=device,
+            model_name=args.model,
+            classes=args.classes,
+            bilinear=args.bilinear,
             epochs=args.epochs,
             batch_size=args.batch_size,
             learning_rate=args.lr,
