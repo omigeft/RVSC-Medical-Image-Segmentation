@@ -7,9 +7,15 @@ Create a working directory and pull the code.
 ```
 mkdir ws
 cd ws
-mkdir src
-cd src
-git clone https://github.com/omigeft/RVSC-Medical-Image-Segmentation.git
+git clone https://github.com/omigeft/RVSC-Medical-Image-Segmentation.git src
+```
+
+Tested on Ubuntu 22.04, CUDA 12.1, Python=3.10, torch=2.1.2, torchvision=0.16.2. Other similar versions should also work.
+
+To install other required packages, run:
+
+```sh
+pip install -r requirements.txt
 ```
 
 ## Data Preprocess
