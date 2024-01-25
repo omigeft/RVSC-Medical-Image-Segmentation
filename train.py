@@ -224,12 +224,9 @@ def get_args():
     parser.add_argument('--optimizer', '-o', type=str, default='adam', help='Optimizer ("adam", "rmsprop")')
 
     parsed_args = parser.parse_args()
-    if parsed_args.model not in ['unet', 'unet++', 'u2net']:
-        raise ValueError('Model must be one of "unet", "unet++", "u2net"')
-    if parsed_args.loss not in ['dice', 'ce', 'dice+ce']:
-        raise ValueError('Loss must be one of "dice", "ce", "dice+ce"')
-    if parsed_args.optimizer not in ['adam', 'rmsprop']:
-        raise ValueError('Optimizer must be one of "adam", "rmsprop"')
+    assert parsed_args.model in ['unet', 'unet++', 'u2net']
+    assert parsed_args.loss in ['dice', 'ce', 'dice+ce']
+    assert parsed_args.optimizer in ['adam', 'rmsprop']
 
     return parsed_args
 

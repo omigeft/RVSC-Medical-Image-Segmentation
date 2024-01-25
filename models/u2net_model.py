@@ -248,6 +248,8 @@ class U2Net(nn.Module):
         self.side_modules = nn.ModuleList(side_list)
         self.out_conv = nn.Conv2d(self.encode_num * n_classes, n_classes, kernel_size=1)  # 这里是针对cat后的结果进行卷积，得到最后的out_ch=1
 
+        self.ReLU = nn.ReLU(inplace=True)
+
     def forward(self, x):
         _, _, h, w = x.shape
 
@@ -278,5 +280,5 @@ class U2Net(nn.Module):
         #     return [x] + side_outputs
         # else:  # 非训练时，直接sigmoid后的数据
         #     return torch.sigmoid(x)
-        return x
+        return self.ReLU(x)
         # return torch.sigmoid(x)

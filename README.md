@@ -56,7 +56,7 @@ python train.py \
 --no-save
 ```
 
-## Evaluate models using test sets
+## Evaluate a model using test dataset
 
 ```sh
 python eval_test.py \
