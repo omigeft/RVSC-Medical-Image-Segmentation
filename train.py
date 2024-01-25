@@ -24,9 +24,6 @@ dir_checkpoint = Path('../i-checkpoints/')
 def train_model(
         model,
         device,
-        model_name: str,
-        classes: int,
-        bilinear: bool,
         epochs: int,
         batch_size: int,
         learning_rate: float,
@@ -62,9 +59,10 @@ def train_model(
     )
 
     logging.info(f'''Starting training:
-        Model:           {model_name}
-        Classes:         {classes}
-        Bilinear:        {bilinear}
+        Model:           {model.model_name}
+        Channels:        {model.n_channels}
+        Classes:         {model.n_classes}
+        Bilinear:        {model.bilinear}
         Epochs:          {epochs}
         Batch size:      {batch_size}
         Learning rate:   {learning_rate}
@@ -196,7 +194,7 @@ def train_model(
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
             state_dict = model.state_dict()
             state_dict['mask_values'] = dataset.mask_values
-            torch.save(state_dict, str(dir_checkpoint / f'{model_name}_checkpoint_epoch{epoch}.pth'))
+            torch.save(state_dict, str(dir_checkpoint / f'{model.model_name}_checkpoint_epoch{epoch}.pth'))
             logging.info(f'Checkpoint {epoch} saved!')
 
     wandb.finish()
@@ -206,7 +204,8 @@ def get_args():
     parser = argparse.ArgumentParser(description='Train the UNet on images and target masks')
     parser.add_argument('--model', '-md', metavar='M', type=str, default='unet',
                         help='Name of model ("unet", "unet++", "u2net")')
-    parser.add_argument('--classes', '-c', type=int, default=2, help='Number of classes')
+    parser.add_argument('--channels', '-ch', type=int, default=1, help='Number of channels in input images')
+    parser.add_argument('--classes', '-cl', type=int, default=2, help='Number of classes')
     parser.add_argument('--bilinear', '-bl', action='store_true', default=False, help='Use bilinear upsampling')
     parser.add_argument('--epochs', '-e', metavar='E', type=int, default=5, help='Number of epochs')
     parser.add_argument('--batch-size', '-bs', dest='batch_size', metavar='B', type=int, default=1, help='Batch size')
@@ -246,11 +245,11 @@ if __name__ == '__main__':
     # n_channels=3 for RGB images
     # n_classes is the number of probabilities you want to get per pixel
     if args.model == 'unet++':
-        model = UNetPlusPlus(n_channels=1, n_classes=args.classes, bilinear=args.bilinear)
+        model = UNetPlusPlus(n_channels=args.channels, n_classes=args.classes, bilinear=args.bilinear)
     elif args.model == 'u2net':
-        model = U2Net(n_channels=1, n_classes=args.classes)
+        model = U2Net(n_channels=args.channels, n_classes=args.classes)
     else:   # args.model == 'unet'
-        model = UNet(n_channels=1, n_classes=args.classes, bilinear=args.bilinear)
+        model = UNet(n_channels=args.channels, n_classes=args.classes, bilinear=args.bilinear)
     model = model.to(memory_format=torch.channels_last)
 
     logging.info(f'Network:\n'
@@ -269,9 +268,6 @@ if __name__ == '__main__':
         train_model(
             model=model,
             device=device,
-            model_name=args.model,
-            classes=args.classes,
-            bilinear=args.bilinear,
             epochs=args.epochs,
             batch_size=args.batch_size,
             learning_rate=args.lr,
@@ -295,9 +291,6 @@ if __name__ == '__main__':
         train_model(
             model=model,
             device=device,
-            model_name=args.model,
-            classes=args.classes,
-            bilinear=args.bilinear,
             epochs=args.epochs,
             batch_size=args.batch_size,
             learning_rate=args.lr,

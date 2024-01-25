@@ -4,6 +4,7 @@ from .unet_parts import *
 class UNetPlusPlus(nn.Module):
     def __init__(self, n_channels, n_classes, bilinear=False):
         super(UNetPlusPlus, self).__init__()
+        self.model_name = 'unet++'
         self.n_channels = n_channels
         self.n_classes = n_classes
         self.bilinear = bilinear
