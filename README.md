@@ -18,9 +18,15 @@ To install other required packages, run:
 pip install -r requirements.txt
 ```
 
+To visualize the training process, you need to register an account on [Weights & Biases](https://wandb.ai/). Then run the following command and follow the instructions to log in.
+
+```sh
+wandb login
+```
+
 ## Data Preprocess
 
-Extract the dataset to the 'ws' directory and make the dataset file structure as follows:
+Extract the dataset to the `ws` directory and make the dataset file structure as follows:
 
 ```
 /TrainingSet
@@ -48,6 +54,7 @@ python train.py \
 --epochs 50 \
 --batch-size 16 \
 --scale 0.5 \
+-ls dice+ce \
 -o adam \
 --amp
 ```
@@ -72,3 +79,11 @@ python eval_test.py \
 --output ../test1_data/i-masks \
 --scale 0.5
 ```
+python train.py \
+--model unet \
+--epochs 50 \
+--batch-size 256 \
+--scale 0.5 \
+-ls dice+ce \
+-o adam \
+--amp

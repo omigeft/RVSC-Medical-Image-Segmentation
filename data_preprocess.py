@@ -138,6 +138,7 @@ def augment_data(img_path, mask_i_path, mask_o_path, output_dir, image_name, tra
     cv2.imwrite(str(output_dir / 'i-masks' / image_name), mask_i)
     cv2.imwrite(str(output_dir / 'o-masks' / image_name), mask_o)
 
+    # TODO: 倍数传参
     for i in range(10):
         # 应用增强
         augmented = transform(image=image, masks=[mask_i, mask_o])

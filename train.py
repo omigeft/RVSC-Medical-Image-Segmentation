@@ -17,8 +17,8 @@ from models import U2Net
 from utils.data_loading import BasicDataset
 from utils.dice_score import dice_loss
 
-dir_img = Path('../train_data/imgs/')
-dir_mask = Path('../train_data/i-masks/')
+dir_img = Path('../train_data_aug/imgs/')
+dir_mask = Path('../train_data_aug/i-masks/')
 dir_checkpoint = Path('../i-checkpoints/')
 
 def train_model(
