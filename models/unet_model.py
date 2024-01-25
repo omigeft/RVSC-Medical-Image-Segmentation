@@ -58,7 +58,15 @@ class CBAM(nn.Module):
 class UNet(nn.Module):
     def __init__(self, n_channels, n_classes, bilinear=False, c_attention=False, s_attention=False):
         super(UNet, self).__init__()
-        self.model_name = 'unet'
+        if c_attention:
+            if s_attention:
+                self.model_name = 'unet_cs'
+            else:
+                self.model_name = 'unet_c'
+        elif s_attention:
+            self.model_name = 'unet_s'
+        else:
+            self.model_name = 'unet'
         self.n_channels = n_channels
         self.n_classes = n_classes
         self.bilinear = bilinear

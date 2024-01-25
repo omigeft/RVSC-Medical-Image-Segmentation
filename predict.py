@@ -9,6 +9,8 @@ from PIL import Image
 
 from utils.data_loading import BasicDataset
 from models import UNet
+from models import UNetPlusPlus
+from models import U2Net
 from utils.utils import plot_img_and_mask
 
 
@@ -35,8 +37,8 @@ def predict_img(net,
 
 def get_args():
     parser = argparse.ArgumentParser(description='Predict masks from input images')
-    parser.add_argument('--model', '-m', default='MODEL.pth', metavar='FILE',
-                        help='Specify the file in which the model is stored')
+    parser.add_argument('--pth', '-p', type=str, default='MODEL.pth', metavar='FILE',
+                        help='Load model from a .pth file')
     parser.add_argument('--input', '-i', metavar='INPUT', nargs='+', help='Filenames of input images', required=True)
     parser.add_argument('--output', '-o', metavar='OUTPUT', nargs='+', help='Filenames of output images')
     parser.add_argument('--viz', '-v', action='store_true',
@@ -46,8 +48,9 @@ def get_args():
                         help='Minimum probability value to consider a mask pixel white')
     parser.add_argument('--scale', '-s', type=float, default=0.5,
                         help='Scale factor for the input images')
+    parser.add_argument('--channels', '-ch', type=int, default=1, help='Number of channels in input images')
+    parser.add_argument('--classes', '-cl', type=int, default=2, help='Number of classes')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
-    parser.add_argument('--classes', '-c', type=int, default=2, help='Number of classes')
 
     return parser.parse_args()
 
@@ -83,18 +86,37 @@ if __name__ == '__main__':
     in_files = args.input
     out_files = get_output_filenames(args)
 
-    net = UNet(n_channels=1, n_classes=args.classes, bilinear=args.bilinear)
-
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    logging.info(f'Loading model {args.model}')
     logging.info(f'Using device {device}')
 
-    net.to(device=device)
-    state_dict = torch.load(args.model, map_location=device)
+    logging.info(f'Loading model from {args.pth}')
+    state_dict = torch.load(args.pth, map_location=device)
+    model_name = state_dict.pop('model_name', None)
     mask_values = state_dict.pop('mask_values', [0, 1])
+
+    if model_name == 'unet++':
+        net = UNetPlusPlus(n_channels=args.channels, n_classes=args.classes, bilinear=args.bilinear)
+    elif model_name == 'u2net':
+        net = U2Net(n_channels=args.channels, n_classes=args.classes)
+    elif model_name == 'unet_cs':
+        net = UNet(n_channels=args.channels, n_classes=args.classes, bilinear=args.bilinear,
+                     c_attention=True, s_attention=True)
+    elif model_name == 'unet_c':
+        net = UNet(n_channels=args.channels, n_classes=args.classes, bilinear=args.bilinear,
+                     c_attention=True, s_attention=False)
+    elif model_name == 'unet_s':
+        net = UNet(n_channels=args.channels, n_classes=args.classes, bilinear=args.bilinear,
+                     c_attention=False, s_attention=True)
+    elif model_name == 'unet':
+        net = UNet(n_channels=args.channels, n_classes=args.classes, bilinear=args.bilinear,
+                     c_attention=False, s_attention=False)
+    else:
+        raise ValueError(f'Model {model_name} not recognized')
+
+    net.to(device=device)
     net.load_state_dict(state_dict)
 
-    logging.info('Model loaded!')
+    logging.info(f'Model {model_name} loaded!')
 
     for i, filename in enumerate(in_files):
         logging.info(f'Predicting image {filename} ...')

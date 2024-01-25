@@ -193,6 +193,7 @@ def train_model(
         if save_checkpoint and epoch % epochs_per_checkpoint == 0:
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
             state_dict = model.state_dict()
+            state_dict['model_name'] = model.model_name
             state_dict['mask_values'] = dataset.mask_values
             torch.save(state_dict, str(dir_checkpoint / f'{model.model_name}_checkpoint_epoch{epoch}.pth'))
             logging.info(f'Checkpoint {epoch} saved!')
@@ -203,7 +204,7 @@ def train_model(
 def get_args():
     parser = argparse.ArgumentParser(description='Train the UNet on images and target masks')
     parser.add_argument('--model', '-md', metavar='M', type=str, default='unet',
-                        help='Name of model ("unet", "unet++", "u2net")')
+                        help='Name of model ("unet", "unet_c", "unet_s", "unet_cs", "unet++", "u2net")')
     parser.add_argument('--channels', '-ch', type=int, default=1, help='Number of channels in input images')
     parser.add_argument('--classes', '-cl', type=int, default=2, help='Number of classes')
     parser.add_argument('--bilinear', '-bl', action='store_true', default=False, help='Use bilinear upsampling')
@@ -211,7 +212,7 @@ def get_args():
     parser.add_argument('--batch-size', '-bs', dest='batch_size', metavar='B', type=int, default=1, help='Batch size')
     parser.add_argument('--learning-rate', '-lr', metavar='LR', type=float, default=1e-5,
                         help='Learning rate', dest='lr')
-    parser.add_argument('--load', '-f', type=str, default=False, help='Load model from a .pth file')
+    parser.add_argument('--pth', '-p', type=str, default=False, help='Load model from a .pth file')
     parser.add_argument('--scale', '-s', type=float, default=0.5, help='Downscaling factor of the images')
     parser.add_argument('--validation', '-v', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')
@@ -224,7 +225,7 @@ def get_args():
     parser.add_argument('--optimizer', '-o', type=str, default='adam', help='Optimizer ("adam", "rmsprop")')
 
     parsed_args = parser.parse_args()
-    assert parsed_args.model in ['unet', 'unet++', 'u2net']
+    assert parsed_args.model in ['unet', 'unet_c', 'unet_s', 'unet_cs', 'unet++', 'u2net']
     assert parsed_args.loss in ['dice', 'ce', 'dice+ce']
     assert parsed_args.optimizer in ['adam', 'rmsprop']
 
@@ -245,8 +246,18 @@ if __name__ == '__main__':
         model = UNetPlusPlus(n_channels=args.channels, n_classes=args.classes, bilinear=args.bilinear)
     elif args.model == 'u2net':
         model = U2Net(n_channels=args.channels, n_classes=args.classes)
+    elif args.model == 'unet_cs':
+        model = UNet(n_channels=args.channels, n_classes=args.classes, bilinear=args.bilinear,
+                     c_attention=True, s_attention=True)
+    elif args.model == 'unet_c':
+        model = UNet(n_channels=args.channels, n_classes=args.classes, bilinear=args.bilinear,
+                     c_attention=True, s_attention=False)
+    elif args.model == 'unet_s':
+        model = UNet(n_channels=args.channels, n_classes=args.classes, bilinear=args.bilinear,
+                     c_attention=False, s_attention=True)
     else:   # args.model == 'unet'
-        model = UNet(n_channels=args.channels, n_classes=args.classes, bilinear=args.bilinear)
+        model = UNet(n_channels=args.channels, n_classes=args.classes, bilinear=args.bilinear,
+                     c_attention=False, s_attention=False)
     model = model.to(memory_format=torch.channels_last)
 
     logging.info(f'Network:\n'
@@ -254,9 +265,10 @@ if __name__ == '__main__':
                  f'\t{model.n_classes} output channels (classes)\n'
                  f'\t{"Bilinear" if model.bilinear else "Transposed conv"} upscaling')
 
-    if args.load:
-        state_dict = torch.load(args.load, map_location=device)
-        del state_dict['mask_values']
+    if args.pth:
+        state_dict = torch.load(args.pth, map_location=device)
+        assert args.model == state_dict.pop('model_name', None)
+        state_dict.pop('mask_values', [0, 1])
         model.load_state_dict(state_dict)
         logging.info(f'Model loaded from {args.load}')
 
