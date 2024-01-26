@@ -139,7 +139,7 @@ def augment_data(img_path, mask_i_path, mask_o_path, output_dir, image_name, tra
     cv2.imwrite(str(output_dir / 'o-masks' / image_name), mask_o)
 
     # TODO: 倍数传参
-    for i in range(10):
+    for i in range(4):
         # 应用增强
         augmented = transform(image=image, masks=[mask_i, mask_o])
         image_aug, mask_i_aug, mask_o_aug = augmented['image'], augmented['masks'][0], augmented['masks'][1]
@@ -160,7 +160,7 @@ def augmentation(img_dir, mask_i_dir, mask_o_dir, output_dir):
         HorizontalFlip(p=0.5),
         VerticalFlip(p=0.5),
         ShiftScaleRotate(shift_limit=0.125, scale_limit=0.2, rotate_limit=45, p=0.5),
-        RandomBrightnessContrast(p=0.3),
+        RandomBrightnessContrast(p=0.2),
         GaussNoise(p=0.2),
         ElasticTransform(p=0.2, alpha=120, sigma=120 * 0.05, alpha_affine=120 * 0.03),
         RandomResizedCrop(height=256, width=216, scale=(0.3, 1.0), p=0.5)

@@ -87,6 +87,7 @@ def train_model(
                               lr=learning_rate, weight_decay=weight_decay, momentum=momentum, foreach=True)
     else:   # optimizer_name == 'adam':
         optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay, foreach=True)
+    # TODO: patience and different lr scheduler
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=50)  # goal: maximize Dice score
     grad_scaler = torch.cuda.amp.GradScaler(enabled=amp)
     criterion = nn.CrossEntropyLoss() if model.n_classes > 1 else nn.BCEWithLogitsLoss()

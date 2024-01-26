@@ -51,13 +51,17 @@ In the source code directory, run `train.py` to start training.
 ```sh
 python train.py \
 --model unet \
---epochs 50 \
---batch-size 16 \
+--epochs 30 \
+--batch-size 64 \
 --scale 0.5 \
+-w 1e-4 \
+-epc 5 \
 -ls dice+ce \
 -o adam \
 --amp
 ```
+
+If CUDA runs out of memory, try reducing the batch size or scaling down the images. Conversely, if the GPU utilization is too low, try increasing the batch size or scaling up the images.
 
 ## Predicting
 
@@ -65,7 +69,7 @@ python train.py \
 python predict.py \
 --pth ../i-checkpoints/unet_checkpoint_epoch2.pth \
 --input ../train_data/imgs/P01-0080.png \
---scale 0.5 \
+--scale 1 \
 --viz \
 --no-save
 ```
@@ -74,16 +78,8 @@ python predict.py \
 
 ```sh
 python eval_test.py \
---pth ../i-checkpoints/unet_checkpoint_epoch2.pth \
+--pth ../i-checkpoints/unet_checkpoint_epoch30.pth \
 --input ../test1_data/imgs/ \
 --output ../test1_data/i-masks \
---scale 0.5
+--scale 1
 ```
-python train.py \
---model unet \
---epochs 50 \
---batch-size 256 \
---scale 0.5 \
--ls dice+ce \
--o adam \
---amp
