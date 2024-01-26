@@ -83,9 +83,3 @@ python eval_test.py \
 --output ../test1_data/i-masks \
 --scale 0.5
 ```
-
-python eval_test.py \
---pth ../i-checkpoints/u2net_checkpoint_epoch50.pth \
---input ../test1_data/imgs/ \
---output ../test1_data/i-masks \
---scale 0.5
