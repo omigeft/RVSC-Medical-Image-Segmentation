@@ -11,7 +11,7 @@ git clone https://github.com/omigeft/RVSC-Medical-Image-Segmentation.git src
 ```
 
 
-在Ubuntu 22.04、CUDA 12.1、Python=3.10、torch=2.1.2、torchvision=0.16.2上测试。其他类似版本也应适用。
+在Ubuntu 22.04、RTX 4090 * 1、CUDA 12.1、Python=3.10、torch=2.1.2、torchvision=0.16.2上测试可以顺利运行。其他类似版本也应适用。
 
 要安装其他所需的软件包，请运行：
 
@@ -19,7 +19,7 @@ git clone https://github.com/omigeft/RVSC-Medical-Image-Segmentation.git src
 pip install -r requirements.txt
 ```
 
-要使培训过程可视化，您需要在[Weights&Biases](https://wandb.ai/)上注册一个帐户。然后运行以下命令并按照说明进行登录。
+要使训练过程可视化，您需要在[Weights&Biases](https://wandb.ai/)上注册一个帐户。然后运行以下命令进行登录。
 
 ```sh
 wandb login
@@ -52,7 +52,7 @@ python data_preprocess.py
 ```sh
 python train.py \
 --model unet \
---epochs 30 \
+--epochs 50 \
 --batch-size 64 \
 --scale 0.5 \
 -w 1e-4 \
@@ -68,7 +68,7 @@ python train.py \
 
 ```sh
 python predict.py \
---pth ../i-checkpoints/unet_checkpoint_epoch30.pth \
+--pth ../i-checkpoints/unet_checkpoint_epoch50.pth \
 --input ../train_data/imgs/P01-0080.png \
 --scale 0.5 \
 --viz \
@@ -79,7 +79,7 @@ python predict.py \
 
 ```sh
 python eval_test.py \
---pth ../i-checkpoints/unet_checkpoint_epoch30.pth \
+--pth ../i-checkpoints/unet_checkpoint_epoch50.pth \
 --input ../test1_data/imgs/ \
 --output ../test1_data/i-masks \
 --scale 0.5
