@@ -67,9 +67,9 @@ If CUDA runs out of memory, try reducing the batch size or scaling down the imag
 
 ```sh
 python predict.py \
---pth ../i-checkpoints/unet_checkpoint_epoch2.pth \
+--pth ../i-checkpoints/unet_checkpoint_epoch30.pth \
 --input ../train_data/imgs/P01-0080.png \
---scale 1 \
+--scale 0.5 \
 --viz \
 --no-save
 ```
@@ -81,5 +81,5 @@ python eval_test.py \
 --pth ../i-checkpoints/unet_checkpoint_epoch30.pth \
 --input ../test1_data/imgs/ \
 --output ../test1_data/i-masks \
---scale 1
+--scale 0.5
 ```
