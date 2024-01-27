@@ -65,7 +65,7 @@ python train.py \
 --amp
 ```
 
-If CUDA runs out of memory, please try reducing the `batch-size` or reducing the image `scale`. On the contrary, if the GPU resources are sufficient and you want to achieve better training results, try increasing `batch-size`, using the original image scale `--scale 1`, or removing the `--amp` parameter.
+If CUDA runs out of memory, please try reducing the `batch-size` or reducing the image `scale`. On the contrary, if the GPU resources are sufficient and you want to achieve better training results, try increasing `batch-size`, using the original image scale `--scale 1`, or removing the `--amp` option.
 
 ## Predicting
 
