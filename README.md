@@ -26,22 +26,23 @@ wandb login
 
 ## Data Preprocess
 
-Extract the dataset to the `ws` directory and make the dataset file structure as follows:
+Download the datasets from [https://rvsc.projets.litislab.fr/](https://rvsc.projets.litislab.fr/). Extract them to the `ws` directory and manually organize dataset files into the structure
+as follows:
 
 ```
 /TrainingSet
 /TestSet/
-    /Test1Set
-    /Test2Set
-    /Test1SetContours
-    /Test2SetContours
+  - /Test1Set
+  - /Test2Set
+  - /Test1SetContours
+  - /Test2SetContours
 ```
 
-Enter the source code directory and run `data_preprocess.py`, automatically processes the RVSC dataset into a trainable format and performs data augmentation.
+Enter the source code directory and run `data_preprocess.py`, automatically processes the RVSC dataset into a trainable format and performs data augmentation. You can specify the times of data augmentation with the `-t` option.
 
 ```sh
 cd src
-python data_preprocess.py
+python data_preprocess.py -t 4
 ```
 
 ## Training
@@ -51,6 +52,9 @@ In the source code directory, run `train.py` to start training.
 ```sh
 python train.py \
 --model unet \
+--imgs ../train_data_aug/imgs/ \
+--masks ../train_data_aug/i-masks/ \
+--save ../i-checkpoints/ \
 --epochs 50 \
 --batch-size 64 \
 --scale 0.5 \
@@ -61,7 +65,7 @@ python train.py \
 --amp
 ```
 
-If CUDA runs out of memory, try reducing the batch size or scaling down the images. Conversely, if the GPU utilization is too low, try increasing the batch size or scaling up the images.
+If CUDA runs out of memory, please try reducing the `batch-size` or reducing the image `scale`. On the contrary, if the GPU resources are sufficient and you want to achieve better training results, try increasing `batch-size`, using the original image scale `--scale 1`, or removing the `--amp` parameter.
 
 ## Predicting
 

@@ -1,11 +1,12 @@
-# 数据文件目录结构：
+# Please manually organize dataset files into the structure as follows before you run the data preprocess script:
 # ../TrainingSet
 # ../TestSet/
-#     /Test1Set
-#     /Test2Set
-#     /Test1SetContours
-#     /Test2SetContours
+#   - /Test1Set
+#   - /Test2Set
+#   - /Test1SetContours
+#   - /Test2SetContours
 
+import argparse
 import os
 import shutil
 import pydicom
@@ -21,13 +22,13 @@ from pathlib import Path
 
 
 def ensure_directory_exists(directory):
-    """确保目录存在，如果不存在则创建目录"""
+    # Ensure that the directory exists, if not, create the directory
     if not os.path.exists(directory):
         os.makedirs(directory)
 
 
 def convert_dcm_to_png(dicom_path, png_path):
-    """将 DICOM 文件转换为 PNG 图像"""
+    # Convert DICOM files to PNG images
     dcm_image = pydicom.dcmread(dicom_path).pixel_array
     im = Image.fromarray(dcm_image)
     im = im.convert('L')  # 转换为灰度图像
@@ -35,8 +36,8 @@ def convert_dcm_to_png(dicom_path, png_path):
 
 
 def create_mask_from_contour(contour_path, mask_path, image_shape):
-    """根据轮廓文件创建 mask 图像"""
-    # 读取轮廓点并转换为 OpenCV 可以理解的格式
+    # Create a mask image based on the profile file
+    # Read contour points and convert them to a format that OpenCV can understand
     contours = []
     with open(contour_path, 'r') as file:
         contour = []
@@ -45,23 +46,23 @@ def create_mask_from_contour(contour_path, mask_path, image_shape):
             contour.append([x, y])
         contours.append(np.array(contour, dtype=np.int32))
 
-    # 创建一个空白的 mask，并用轮廓点填充区域
+    # Create a blank mask and fill the area with contour points
     mask = np.zeros(image_shape, dtype=np.uint8)
-    cv2.fillPoly(mask, contours, 255)  # 填充轮廓内部
+    cv2.fillPoly(mask, contours, 255)  # Fill the interior of the contour with white
 
     Image.fromarray(mask).save(mask_path)
 
 
 def copy_and_process_files(base_dir, dataset_folder, target_folder, start_index, end_index):
-    # 创建目标目录
+    # Create target directories
     target_dir_imgs = os.path.join(base_dir, target_folder, 'imgs')
-    target_dir_i_masks = os.path.join(base_dir, target_folder, 'i-masks')  # 内轮廓 mask
-    target_dir_o_masks = os.path.join(base_dir, target_folder, 'o-masks')  # 外轮廓 mask
+    target_dir_i_masks = os.path.join(base_dir, target_folder, 'i-masks')  # Endocardial contour mask
+    target_dir_o_masks = os.path.join(base_dir, target_folder, 'o-masks')  # Epicardial contour mask
     ensure_directory_exists(target_dir_imgs)
     ensure_directory_exists(target_dir_i_masks)
     ensure_directory_exists(target_dir_o_masks)
 
-    # 遍历dataset_folder文件夹
+    # Traverse dataset_folder
     for i in range(start_index, end_index + 1):
         patient_folder = f'patient{i:02d}'
         list_file_path = os.path.join(base_dir, dataset_folder, patient_folder, f'P{i:02d}list.txt')
@@ -70,13 +71,13 @@ def copy_and_process_files(base_dir, dataset_folder, target_folder, start_index,
             print(f"List file not found: {list_file_path}")
             continue
 
-        # 读取并处理list文件中的每一行
+        # Read and process each line in the list file
         with open(list_file_path, 'r') as file:
             for line in file:
                 line = line.strip().replace('.\\', '').replace('\\', '/')
                 contour_filename = line.split('/')[-1]
 
-                # 处理 DICOM 文件并保存为 PNG
+                # Process DICOM files and save them as PNG
                 dicom_filename = contour_filename.replace('-icontour-manual.txt', '.dcm').replace('-ocontour-manual.txt', '.dcm')
                 dicom_path = os.path.join(base_dir, dataset_folder, patient_folder, f'P{i:02d}dicom', dicom_filename)
                 png_filename = dicom_filename.replace('.dcm', '.png')
@@ -86,13 +87,13 @@ def copy_and_process_files(base_dir, dataset_folder, target_folder, start_index,
                     print(f"Converted and saved: {png_path}")
                 else:
                     print(f"Dicom file not found: {dicom_path}")
-                    continue  # 如果 DICOM 文件不存在，跳过后续处理
+                    continue  # If the DICOM file does not exist, skip subsequent processing
 
-                # 根据是 i-contour 还是 o-contour 创建并保存 mask
+                # Create and save a mask based on whether it is i-contour or o-contour
                 mask_path = os.path.join(target_dir_i_masks if 'icontour' in contour_filename else target_dir_o_masks, png_filename)
                 contour_path = os.path.join(base_dir, dataset_folder, line)
                 if os.path.exists(contour_path) and os.path.exists(png_path):
-                    image_shape = Image.open(png_path).size[::-1]  # 获取图像尺寸 (高度, 宽度)
+                    image_shape = Image.open(png_path).size[::-1]  # Obtain image size (height, width)
                     create_mask_from_contour(contour_path, mask_path, image_shape)
                     print(f"Created and saved mask: {mask_path}")
                 else:
@@ -103,54 +104,53 @@ def copy_contours(base_dir, dataset_folder, source_folder, target_folder, start_
     source_dir = os.path.join(base_dir, dataset_folder, source_folder)
     target_base_dir = os.path.join(base_dir, dataset_folder, target_folder)
 
-    # 确保源和目标基础目录存在
+    # Ensure that the source and target base directories exist
     if not os.path.exists(source_dir) or not os.path.exists(target_base_dir):
         print("Source or target base directory does not exist.")
         return
 
-    # 遍历指定范围内的文件夹
+    # Traverse folders within a specified range
     for i in range(start_index, end_index + 1):
         source_folder = os.path.join(source_dir, f"P{i:02d}contours-manual")
         target_folder = os.path.join(target_base_dir, f"patient{i:02d}")
 
-        # 检查源文件夹是否存在
+        # Check if the source folder exists
         if not os.path.exists(source_folder):
             print(f"Source folder not found: {source_folder}")
             continue
 
-        # 创建目标文件夹（如果不存在）
+        # Create target folder if it does not exist
         if not os.path.exists(target_folder):
             os.makedirs(target_folder)
 
-        # 复制文件夹
+        # copy the folder
         shutil.copytree(source_folder, os.path.join(target_folder, f"P{i:02d}contours-manual"), dirs_exist_ok=True)
         print(f"Copied {source_folder} to {target_folder}")
 
 
-def augment_data(img_path, mask_i_path, mask_o_path, output_dir, image_name, transform):
-    # 读取图像和掩码
+def augment_data(img_path, mask_i_path, mask_o_path, output_dir, image_name, transform, times):
+    # Read images and masks
     image = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
     mask_i = cv2.imread(str(mask_i_path), cv2.IMREAD_GRAYSCALE)
     mask_o = cv2.imread(str(mask_o_path), cv2.IMREAD_GRAYSCALE)
 
-    # 保存原始图像和掩码
+    # Save the original images and masks
     cv2.imwrite(str(output_dir / 'imgs' / image_name), image)
     cv2.imwrite(str(output_dir / 'i-masks' / image_name), mask_i)
     cv2.imwrite(str(output_dir / 'o-masks' / image_name), mask_o)
 
-    # TODO: 倍数传参
-    for i in range(4):
-        # 应用增强
+    for i in range(times):
+        # Applying augmentations to the images and masks
         augmented = transform(image=image, masks=[mask_i, mask_o])
         image_aug, mask_i_aug, mask_o_aug = augmented['image'], augmented['masks'][0], augmented['masks'][1]
 
-        # 保存增强后的图像和掩码
+        # Save the augmented images and masks
         cv2.imwrite(str(output_dir / 'imgs' / f'aug{i}_{image_name}'), image_aug)
         cv2.imwrite(str(output_dir / 'i-masks' / f'aug{i}_{image_name}'), mask_i_aug)
         cv2.imwrite(str(output_dir / 'o-masks' / f'aug{i}_{image_name}'), mask_o_aug)
 
 
-def augmentation(img_dir, mask_i_dir, mask_o_dir, output_dir):
+def augmentation(img_dir, mask_i_dir, mask_o_dir, output_dir, times):
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / 'imgs').mkdir(parents=True, exist_ok=True)
     (output_dir / 'i-masks').mkdir(parents=True, exist_ok=True)
@@ -172,21 +172,30 @@ def augmentation(img_dir, mask_i_dir, mask_o_dir, output_dir):
             mask_i_path = mask_i_dir / img_name
             mask_o_path = mask_o_dir / img_name
 
-            augment_data(img_path, mask_i_path, mask_o_path, output_dir, img_name, transform)
+            augment_data(img_path, mask_i_path, mask_o_path, output_dir, img_name, transform, times)
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description='Data preprocessing and augmentation')
+
+    parser.add_argument('--times', '-t', type=int, default=4, help='Augmentation times')
+
+    return parser.parse_args()
 
 
 if __name__ == '__main__':
-    # 调用函数
-    base_dir = '..'  # 当前目录作为基本目录
+    args = get_args()
+
+    base_dir = '..'
     copy_and_process_files(base_dir, 'TrainingSet', 'train_data', 1, 16)
     copy_contours(base_dir, 'TestSet', "Test1SetContours", "Test1Set", 17, 32)
     copy_contours(base_dir, 'TestSet', "Test2SetContours", "Test2Set", 33, 48)
     copy_and_process_files(base_dir, 'TestSet/Test1Set', 'test1_data', 17, 32)
     copy_and_process_files(base_dir, 'TestSet/Test2Set', 'test2_data', 33, 48)
 
-    print("数据文件处理和转换完成。")
+    print("Copying and processing files finished.")
 
     augmentation(Path('../train_data/imgs'), Path('../train_data/i-masks'), Path('../train_data/o-masks'),
-                 Path('../train_data_aug'))
+                 Path('../train_data_aug'), args.times)
 
-    print("数据增广完成")
+    print("Data augmentation finished.")

@@ -3,7 +3,7 @@ from torch import Tensor
 
 
 def accuracy(input: Tensor, target: Tensor, epsilon: float = 1e-6):
-    # 计算 Accuracy
+    # Calculate Accuracy
     # True Positives (TP) + True Negatives (TN)
     correct_predictions = ((input == target) * (target == 1)).sum()
 

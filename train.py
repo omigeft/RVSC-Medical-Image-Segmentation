@@ -17,13 +17,13 @@ from models import U2Net
 from utils.data_loading import BasicDataset
 from utils.dice_score import dice_loss
 
-dir_img = Path('../train_data_aug/imgs/')
-dir_mask = Path('../train_data_aug/i-masks/')
-dir_checkpoint = Path('../i-checkpoints/')
 
 def train_model(
         model,
         device,
+        dir_img: Path,
+        dir_mask: Path,
+        dir_checkpoint: Path,
         epochs: int,
         batch_size: int,
         learning_rate: float,
@@ -209,12 +209,18 @@ def get_args():
     parser.add_argument('--channels', '-ch', type=int, default=1, help='Number of channels in input images')
     parser.add_argument('--classes', '-cl', type=int, default=2, help='Number of classes')
     parser.add_argument('--bilinear', '-bl', action='store_true', default=False, help='Use bilinear upsampling')
+    parser.add_argument('--imgs', '-i', metavar='IMGS', type=str, default='../train_data_aug/imgs/',
+                        help='directory of input images')
+    parser.add_argument('--masks', '-mx', metavar='MASK', type=str, default='../train_data_aug/i-masks/',
+                        help='directory of target masks')
+    parser.add_argument('--save', '-sv', metavar='SAVE', type=str, default='../i-checkpoints/',
+                        help='directory of saved model checkpoints')
     parser.add_argument('--epochs', '-e', metavar='E', type=int, default=5, help='Number of epochs')
     parser.add_argument('--batch-size', '-bs', dest='batch_size', metavar='B', type=int, default=1, help='Batch size')
     parser.add_argument('--learning-rate', '-lr', metavar='LR', type=float, default=1e-5,
                         help='Learning rate', dest='lr')
     parser.add_argument('--pth', '-p', type=str, default=False, help='Load model from a .pth file')
-    parser.add_argument('--scale', '-s', type=float, default=0.5, help='Downscaling factor of the images')
+    parser.add_argument('--scale', '-sc', type=float, default=0.5, help='Downscaling factor of the images')
     parser.add_argument('--validation', '-v', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')
     parser.add_argument('--amp', action='store_true', default=False, help='Use mixed precision')
@@ -278,6 +284,9 @@ if __name__ == '__main__':
         train_model(
             model=model,
             device=device,
+            dir_img=args.imgs,
+            dir_mask=args.masks,
+            dir_checkpoint=args.save,
             epochs=args.epochs,
             batch_size=args.batch_size,
             learning_rate=args.lr,
@@ -301,6 +310,9 @@ if __name__ == '__main__':
         train_model(
             model=model,
             device=device,
+            dir_img=args.imgs,
+            dir_mask=args.masks,
+            dir_checkpoint=args.save,
             epochs=args.epochs,
             batch_size=args.batch_size,
             learning_rate=args.lr,

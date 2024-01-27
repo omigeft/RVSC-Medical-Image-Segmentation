@@ -27,22 +27,23 @@ wandb login
 
 ## 数据预处理
 
-解压数据集到`ws`目录下，数据集文件结构如下：
+从[https://rvsc.projets.litislab.fr/](https://rvsc.projets.litislab.fr/)下载数据集，
+解压数据集到`ws`目录下，手动整理数据集文件结构如下：
 
 ```
 /TrainingSet
 /TestSet/
-    /Test1Set
-    /Test2Set
-    /Test1SetContours
-    /Test2SetContours
+  - /Test1Set
+  - /Test2Set
+  - /Test1SetContours
+  - /Test2SetContours
 ```
 
-进入源代码目录，运行`data_preprocess.py`，自动处理RVSC数据集为可训练的格式并进行数据增广。
+进入源代码目录，运行`data_preprocess.py`，自动处理RVSC数据集为可训练的格式并进行数据增广。 可以使用`-t`参数指定数据额外增广的倍数。 
 
 ```sh
 cd src
-python data_preprocess.py
+python data_preprocess.py -t 4
 ```
 
 ## 训练
@@ -52,6 +53,9 @@ python data_preprocess.py
 ```sh
 python train.py \
 --model unet \
+--imgs ../train_data_aug/imgs/ \
+--masks ../train_data_aug/i-masks/ \
+--save ../i-checkpoints/ \
 --epochs 50 \
 --batch-size 64 \
 --scale 0.5 \
@@ -62,7 +66,7 @@ python train.py \
 --amp
 ```
 
-如果CUDA内存不足，请尝试减小批处理大小或缩小图像的比例。相反，如果GPU利用率过低，请尝试增加批处理大小或放大图像。 
+如果CUDA显存不足，请尝试减小`batch-size`或缩小图像的比例`scale`。相反，如果GPU资源充足且想要获得更好的训练效果，请尝试增加`batch-size`、使用原始图像比例`--scale 1`或去掉`--amp`参数。 
 
 ## 预测
 

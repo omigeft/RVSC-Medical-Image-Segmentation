@@ -3,7 +3,7 @@ from torch import Tensor
 
 
 def precision(input: Tensor, target: Tensor, epsilon: float = 1e-6):
-    # 计算 Precision
+    # Calculate Precision
     # True Positives (TP)
     true_positives = (input * target).sum()
 
