@@ -12,8 +12,7 @@ cd ws
 git clone https://github.com/omigeft/RVSC-Medical-Image-Segmentation.git src
 ```
 
-
-在Ubuntu 22.04、RTX 4090 * 1、CUDA 12.1、Python=3.10、torch=2.1.2、torchvision=0.16.2上测试可以顺利运行。其他类似版本也应适用。
+项目代码在Ubuntu 22.04、RTX 4090 * 1、CUDA 12.1、Python=3.10、torch=2.1.2、torchvision=0.16.2上测试可以顺利运行。其他类似版本也应适用。
 
 要安装其他所需的软件包，请运行：
 
