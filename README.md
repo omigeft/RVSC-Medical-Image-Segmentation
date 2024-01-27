@@ -1,4 +1,4 @@
-[中文版README](README_zh.md)
+If you are familiar with Chinese, I recommend you to read [中文版README](README_zh.md).
 
 ## Preparation
 
@@ -92,9 +92,9 @@ python eval_test.py \
 
 After testing, the most effective model is UNet++. The following is a display of some segmentation results. The image on the left is the segmentation result of UNet++, and the image on the right is the real annotated data.
 
-[P33-0020-seg](assets/P33-0020-seg.png)
+![P33-0020-seg](assets/P33-0020-seg.png)
 
-[P35-0140-seg](assets/P35-0140-seg.png)
+![P35-0140-seg](assets/P35-0140-seg.png)
 
 ## Acknowledgement
 

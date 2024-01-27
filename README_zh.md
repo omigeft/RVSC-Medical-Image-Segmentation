@@ -1,4 +1,6 @@
-[English README](README.md)
+Here is [English README](README.md).
+
+本项目介绍博客[CSDN](https://blog.csdn.net/Omigeq/article/details/135882653)，内含更多信息。
 
 ## 准备
 
@@ -93,9 +95,9 @@ python eval_test.py \
 
 经过测试，效果最好的模型是UNet++。以下是一些分割结果的展示，左边的图片为UNet++的分割结果，右边的图片为真实标注数据。
 
-[P33-0020-seg](assets/P33-0020-seg.png)
+![P33-0020-seg](assets/P33-0020-seg.png)
 
-[P35-0140-seg](assets/P35-0140-seg.png)
+![P35-0140-seg](assets/P35-0140-seg.png)
 
 ## 致谢
 
