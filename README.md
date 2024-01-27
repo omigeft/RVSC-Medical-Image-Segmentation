@@ -87,3 +87,25 @@ python eval_test.py \
 --output ../test1_data/i-masks \
 --scale 0.5
 ```
+
+## Segmentation results
+
+After testing, the most effective model is UNet++. The following is a display of some segmentation results. The image on the left is the segmentation result of UNet++, and the image on the right is the real annotated data.
+
+[P33-0020-seg](assets/P33-0020-seg.png)
+
+[P35-0140-seg](assets/P35-0140-seg.png)
+
+## Acknowledgement
+
+This project refers to the following code:
+
+* [milesial/Pytorch-UNet](https://github.com/milesial/Pytorch-UNet)
+* [WZMIAOMIAO/deep-learning-for-image-processing](https://github.com/WZMIAOMIAO/deep-learning-for-image-processing)
+* [CSDN blog](https://blog.csdn.net/qq_43205656/article/details/121191937)
+
+I would like to thank the authors for their excellent work.
+
+## License
+
+This project is open source using the [GPL-3.0 licence](LICENSE).

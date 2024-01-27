@@ -88,3 +88,25 @@ python eval_test.py \
 --output ../test1_data/i-masks \
 --scale 0.5
 ```
+
+## 分割结果
+
+经过测试，效果最好的模型是UNet++。以下是一些分割结果的展示，左边的图片为UNet++的分割结果，右边的图片为真实标注数据。
+
+[P33-0020-seg](assets/P33-0020-seg.png)
+
+[P35-0140-seg](assets/P35-0140-seg.png)
+
+## 致谢
+
+本项目参考了以下代码：
+
+* [milesial/Pytorch-UNet](https://github.com/milesial/Pytorch-UNet)
+* [WZMIAOMIAO/deep-learning-for-image-processing](https://github.com/WZMIAOMIAO/deep-learning-for-image-processing)
+* [CSDN blog](https://blog.csdn.net/qq_43205656/article/details/121191937)
+
+在此表示感谢。
+
+## 开源协议
+
+本项目采用[GPL-3.0 licence](LICENSE)协议开源。
